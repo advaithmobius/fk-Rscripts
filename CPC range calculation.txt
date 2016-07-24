@@ -1,0 +1,19 @@
+library(rootSolve)
+library(numDeriv)
+besrpcrange_max=max(rpcrange)
+targetrpc=min(targetrpc,rpcrange_max)
+rpcsolve=function(x) rpccurve(x)-targetrpc
+targetcpc=uniroot.all(function(x) rpcsolve(x),c(maxcpc_bot,maxcpc_top))
+require(numDeriv)
+revslope=grad(revcurve,maxcpcrange)
+revflatindex=which(abs(revslope-0)==min(abs(revslope-0)))
+revflatcpc=maxcpcrange[revflatindex]
+bestrootindex=which(abs(targetcpc-revflatcpc)==min(abs(targetcpc-revflatcpc)))
+bestrootcpc=targetcpc[bestrootindex]
+gmprofitslope=grad(gmprofitcurve,maxcpcrange)
+reg_gmprofslope=rlm(gmprofitslope~poly(maxcpcrange,3,raw="TRUE"))
+gmprofslope_curve=function(x) reg_gmprofslope$coefficient[4]*x^3 + reg_gmprofslope$coefficient[3]*x^2 +reg_gmprofslope$coefficient[2]*x +reg_gmprofslope$coefficient[1]
+gmprofroot=uniroot.all(function(x)gmprofslope_curve(x),c(maxcpc_bot,maxcpc_top))
+bestgmrootindex=which(abs(gmprofroot-revflatcpc)==min(abs(gmprofroot-revflatcpc)))
+bestgmrootcpc=gmprofroot[bestgmrootindex]
+bestcpcrange=c(min(bestrootcpc,bestgmrootcpc),max(bestrootcpc,bestgmrootcpc))
